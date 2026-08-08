@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, type User } from "firebase/auth";
+import { firebaseAuth, firebaseReady } from "../lib/firebase";
 
 const questions = [
   "最近、気持ちが落ち込んだり、何をしても楽しめないと感じますか？",
@@ -19,12 +21,24 @@ export default function Home() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [device, setDevice] = useState("確認中");
   const [historyResult, setHistoryResult] = useState<{score:number; messages:number; recent:boolean} | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
     const mobile = window.matchMedia("(max-width: 720px)").matches;
     const ua = navigator.userAgent;
     setDevice(`${mobile ? "モバイル" : "PC / タブレット"} · ${/iPhone|Android/i.test(ua) ? "スマートフォン" : "ブラウザ"}`);
   }, []);
+  useEffect(() => firebaseAuth ? onAuthStateChanged(firebaseAuth, setUser) : undefined, []);
+
+  const authAction = async (mode: "login" | "signup") => {
+    if (!firebaseAuth) { setAuthError("Firebaseの設定がまだありません。.envにNEXT_PUBLIC_FIREBASE_*を設定してください。"); return; }
+    try { setAuthError(""); if (mode === "login") await signInWithEmailAndPassword(firebaseAuth, email, password); else await createUserWithEmailAndPassword(firebaseAuth, email, password); setShowLogin(false); }
+    catch { setAuthError("メールアドレスかパスワードを確認してください。"); }
+  };
 
   const score = useMemo(() => answers.reduce((a, b) => a + b, 0), [answers]);
   const result = score <= 3 ? "穏やか" : score <= 8 ? "少し気になる" : "ケアを増やそう";
@@ -55,7 +69,7 @@ export default function Home() {
     <main>
       <nav className="nav wrap">
         <div className="brand"><span className="brand-mark">◒</span><span>よりみち<span className="brand-dot">.</span></span></div>
-        <div className="nav-actions"><span className="privacy-pill">匿名でOK</span><button className="login" onClick={() => setSignedIn(!signedIn)}>{signedIn ? "ログアウト" : "ログイン"}</button></div>
+        <div className="nav-actions"><span className="privacy-pill">匿名でOK</span>{user ? <button className="login" onClick={() => firebaseAuth && signOut(firebaseAuth)}>ログアウト</button> : <button className="login" onClick={() => setShowLogin(true)}>ログイン</button>}</div>
       </nav>
 
       <section className="hero wrap">
@@ -87,6 +101,7 @@ export default function Home() {
         <button className="close" aria-label="閉じる" onClick={() => setStarted(false)}>×</button>
       </div></div>}
       {showPrivacy && <div className="modal-backdrop"><div className="help-card"><button className="close" onClick={() => setShowPrivacy(false)}>×</button><div className="result-badge">HELP IS HERE</div><h2>ひとりで抱えなくて大丈夫。</h2><p>緊急で危険を感じる時は、119（救急）または110へ。学校では保健室・担任・学年の先生に「今つらい」と伝えるだけでも大丈夫です。</p><div className="help-links"><a href="tel:0120-783-556">24時間子供SOSダイヤル<br /><b>0120-0-78310</b></a><a href="tel:0120-279-338">よりそいホットライン<br /><b>0120-279-338</b></a></div></div></div>}
+      {showLogin && <div className="modal-backdrop"><div className="login-card"><button className="close" onClick={() => setShowLogin(false)}>×</button><div className="result-badge">YOUR SPACE</div><h2>よりみちを、<span>自分の場所</span>に。</h2><p>ログインすると、毎朝の「おはよう」やセルフチェックの履歴をこの端末に紐づけられます。診断結果を学校へ自動共有することはありません。</p><input className="auth-input" type="email" placeholder="メールアドレス" value={email} onChange={(e) => setEmail(e.target.value)} /><input className="auth-input" type="password" placeholder="パスワード（6文字以上）" value={password} onChange={(e) => setPassword(e.target.value)} />{authError && <div className="auth-error">{authError}</div>}<div className="auth-actions"><button className="primary" onClick={() => authAction("login")}>ログイン</button><button className="login" onClick={() => authAction("signup")}>新規登録</button></div>{!firebaseReady && <small className="auth-note">現在はログインなしでも利用できます</small>}</div></div>}
 
       <footer className="footer wrap"><span>よりみち. / Kaijo wellbeing prototype</span><button onClick={() => setShowPrivacy(true)}>安全とプライバシー</button><span>© 2026</span></footer>
     </main>
