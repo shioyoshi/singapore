@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, type User } from "firebase/auth";
-import { firebaseAuth, firebaseReady } from "../lib/firebase";
+import type { User } from "@supabase/supabase-js";
+import { supabase, supabaseReady } from "../lib/supabase";
 
 const questions = [
   "最近、気持ちが落ち込んだり、何をしても楽しめないと感じますか？",
@@ -34,12 +34,12 @@ export default function Home() {
     const ua = navigator.userAgent;
     setDevice(`${mobile ? "モバイル" : "PC / タブレット"} · ${/iPhone|Android/i.test(ua) ? "スマートフォン" : "ブラウザ"}`);
   }, []);
-  useEffect(() => firebaseAuth ? onAuthStateChanged(firebaseAuth, setUser) : undefined, []);
+  useEffect(() => { if (!supabase) return; supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null)); return () => listener.subscription.unsubscribe(); }, []);
 
   const authAction = async (mode: "login" | "signup") => {
-    if (!firebaseAuth) { setAuthError("Firebaseの設定がまだありません。.envにNEXT_PUBLIC_FIREBASE_*を設定してください。"); return; }
-    try { setAuthError(""); if (mode === "login") await signInWithEmailAndPassword(firebaseAuth, email, password); else await createUserWithEmailAndPassword(firebaseAuth, email, password); setShowLogin(false); }
-    catch { setAuthError("メールアドレスかパスワードを確認してください。"); }
+    if (!supabase) { setAuthError("Supabaseの設定がまだありません。.envにNEXT_PUBLIC_SUPABASE_*を設定してください。"); return; }
+    const result = mode === "login" ? await supabase.auth.signInWithPassword({ email, password }) : await supabase.auth.signUp({ email, password });
+    if (result.error) setAuthError(result.error.message); else setShowLogin(false);
   };
 
   const score = useMemo(() => answers.reduce((a, b) => a + b, 0), [answers]);
@@ -79,7 +79,7 @@ export default function Home() {
     <main>
       <nav className="nav wrap">
         <div className="brand"><span className="brand-mark">◒</span><span>よりみち<span className="brand-dot">.</span></span></div>
-        <div className="nav-actions"><span className="privacy-pill">匿名でOK</span>{user ? <button className="login" onClick={() => firebaseAuth && signOut(firebaseAuth)}>ログアウト</button> : <button className="login" onClick={() => setShowLogin(true)}>ログイン</button>}</div>
+        <div className="nav-actions"><span className="privacy-pill">匿名でOK</span>{user ? <button className="login" onClick={() => supabase?.auth.signOut()}>ログアウト</button> : <button className="login" onClick={() => setShowLogin(true)}>ログイン</button>}</div>
       </nav>
 
       <section className="hero wrap">
@@ -111,7 +111,7 @@ export default function Home() {
         <button className="close" aria-label="閉じる" onClick={() => setStarted(false)}>×</button>
       </div></div>}
       {showPrivacy && <div className="modal-backdrop"><div className="help-card"><button className="close" onClick={() => setShowPrivacy(false)}>×</button><div className="result-badge">HELP IS HERE</div><h2>ひとりで抱えなくて大丈夫。</h2><p>緊急で危険を感じる時は、119（救急）または110へ。学校では保健室・担任・学年の先生に「今つらい」と伝えるだけでも大丈夫です。</p><div className="help-links"><a href="tel:0120-783-556">24時間子供SOSダイヤル<br /><b>0120-0-78310</b></a><a href="tel:0120-279-338">よりそいホットライン<br /><b>0120-279-338</b></a></div></div></div>}
-      {showLogin && <div className="modal-backdrop"><div className="login-card"><button className="close" onClick={() => setShowLogin(false)}>×</button><div className="result-badge">YOUR SPACE</div><h2>よりみちを、<span>自分の場所</span>に。</h2><p>ログインすると、毎朝の「おはよう」やセルフチェックの履歴をこの端末に紐づけられます。診断結果を学校へ自動共有することはありません。</p><input className="auth-input" type="email" placeholder="メールアドレス" value={email} onChange={(e) => setEmail(e.target.value)} /><input className="auth-input" type="password" placeholder="パスワード（6文字以上）" value={password} onChange={(e) => setPassword(e.target.value)} />{authError && <div className="auth-error">{authError}</div>}<div className="auth-actions"><button className="primary" onClick={() => authAction("login")}>ログイン</button><button className="login" onClick={() => authAction("signup")}>新規登録</button></div>{!firebaseReady && <small className="auth-note">現在はログインなしでも利用できます</small>}</div></div>}
+      {showLogin && <div className="modal-backdrop"><div className="login-card"><button className="close" onClick={() => setShowLogin(false)}>×</button><div className="result-badge">YOUR SPACE</div><h2>よりみちを、<span>自分の場所</span>に。</h2><p>ログインすると、毎朝の「おはよう」やセルフチェックの履歴を本人のアカウントに安全に紐づけられます。学校へ自動共有することはありません。</p><input className="auth-input" type="email" placeholder="メールアドレス" value={email} onChange={(e) => setEmail(e.target.value)} /><input className="auth-input" type="password" placeholder="パスワード（6文字以上）" value={password} onChange={(e) => setPassword(e.target.value)} />{authError && <div className="auth-error">{authError}</div>}<div className="auth-actions"><button className="primary" onClick={() => authAction("login")}>ログイン</button><button className="login" onClick={() => authAction("signup")}>新規登録</button></div>{!supabaseReady && <small className="auth-note">現在はログインなしでも利用できます</small>}</div></div>}
 
       <footer className="footer wrap"><span>よりみち. / Created by GIC Kaijo G Group</span><button className="footer-center" onClick={() => setShowPrivacy(true)}>安全とプライバシー</button><span>© 2026 GIC Kaijo G Group</span></footer>
     </main>
