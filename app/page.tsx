@@ -69,13 +69,13 @@ export default function Home() {
   return (
     <main>
       <nav className="nav wrap">
-        <div className="brand"><span className="brand-mark">◒</span><span>よりみち<span className="brand-dot">.</span></span></div>
+        <div className="brand"><span className="brand-mark">◒</span><span>Salus<span className="brand-dot">.</span></span></div>
         <div className="nav-actions"><span className="privacy-pill">匿名でOK</span>{user ? <button className="login" onClick={() => supabase?.auth.signOut()}>ログアウト</button> : <button className="login" onClick={() => setShowLogin(true)}>ログイン</button>}</div>
       </nav>
 
       <section className="hero wrap">
         <div className="hero-copy">
-          <h1>今日の自分に、<br /><em>やさしいよりみち。</em></h1>
+          <h1>今日の自分に、<br /><em>やさしいSalus。</em></h1>
           <p className="lead">3分のセルフチェックで、今の心の天気を知る。診断ではなく、あなたが次の一歩を選ぶための場所です。</p>
           <div className="hero-cta"><button className="primary" onClick={() => setStarted(true)}>セルフチェックをはじめる <span>→</span></button><span className="tiny">ログインなしで使えます</span></div>
           <div className="trust-row"><span>🔒 回答は保存しません</span><span>🌱 医療診断ではありません</span></div>
@@ -102,9 +102,9 @@ export default function Home() {
         <button className="close" aria-label="閉じる" onClick={() => setStarted(false)}>×</button>
       </div></div>}
       {showPrivacy && <div className="modal-backdrop"><div className="help-card"><button className="close" onClick={() => setShowPrivacy(false)}>×</button><div className="result-badge">HELP IS HERE</div><h2>ひとりで抱えなくて大丈夫。</h2><p>緊急で危険を感じる時は、119（救急）または110へ。学校では保健室・担任・学年の先生に「今つらい」と伝えるだけでも大丈夫です。</p><div className="help-links"><a href="tel:0120-783-556">24時間子供SOSダイヤル<br /><b>0120-0-78310</b></a><a href="tel:0120-279-338">よりそいホットライン<br /><b>0120-279-338</b></a></div></div></div>}
-      {showLogin && <div className="modal-backdrop"><div className="login-card"><button className="close" onClick={() => setShowLogin(false)}>×</button><div className="result-badge">YOUR SPACE</div><h2>よりみちを、<span>自分の場所</span>に。</h2><p>ログインすると、毎朝の「おはよう」やセルフチェックの履歴を本人のアカウントに安全に紐づけられます。学校へ自動共有することはありません。</p><input className="auth-input" type="email" placeholder="メールアドレス" value={email} onChange={(e) => setEmail(e.target.value)} /><input className="auth-input" type="password" placeholder="パスワード（6文字以上）" value={password} onChange={(e) => setPassword(e.target.value)} />{authError && <div className="auth-error">{authError}</div>}<div className="auth-actions"><button className="primary" onClick={() => authAction("login")}>ログイン</button><button className="login" onClick={() => authAction("signup")}>新規登録</button></div>{!supabaseReady && <small className="auth-note">現在はログインなしでも利用できます</small>}</div></div>}
+      {showLogin && <div className="modal-backdrop"><div className="login-card"><button className="close" onClick={() => setShowLogin(false)}>×</button><div className="result-badge">YOUR SPACE</div><h2>Salusを、<span>自分の場所</span>に。</h2><p>ログインすると、毎朝の「おはよう」やセルフチェックの履歴を本人のアカウントに安全に紐づけられます。学校へ自動共有することはありません。</p><input className="auth-input" type="email" placeholder="メールアドレス" value={email} onChange={(e) => setEmail(e.target.value)} /><input className="auth-input" type="password" placeholder="パスワード（6文字以上）" value={password} onChange={(e) => setPassword(e.target.value)} />{authError && <div className="auth-error">{authError}</div>}<div className="auth-actions"><button className="primary" onClick={() => authAction("login")}>ログイン</button><button className="login" onClick={() => authAction("signup")}>新規登録</button></div>{!supabaseReady && <small className="auth-note">現在はログインなしでも利用できます</small>}</div></div>}
 
-      <footer className="footer wrap"><span>よりみち. / Created by GIC Kaijo G Group</span><button className="footer-center" onClick={() => setShowPrivacy(true)}>安全とプライバシー</button><span>© 2026 GIC Kaijo G Group</span></footer>
+      <footer className="footer wrap"><span>Salus. / Created by GIC Kaijo G Group</span><button className="footer-center" onClick={() => setShowPrivacy(true)}>安全とプライバシー</button><span>© 2026 GIC Kaijo G Group</span></footer>
     </main>
   );
 }
